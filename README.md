@@ -61,7 +61,7 @@ See the corresponding Docker Compose file for the compose snippet.
 
 ### DOWNLOADERS
 
-- ruTorrent - Torrent Downloader
+- ruTorrent - Torrent Downloader (LINUX)
 - jDownloader - Download management (LINUX)
 - TransmissionBT with VPN - Torrent Downloader with [IPVanish](https://www.smarthomebeginner.com/go/ipvanish) VPN. (LINUX)
 - SABnzbd - Binary newsgrabber, NZB downloader (LINUX)
