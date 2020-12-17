@@ -163,7 +163,6 @@ First, install Docker and Docker Compose.
 ## ToDo - New Apps Coming
 
  - TellyTv- IPTV proxy for Plex
- - Plex web tools - Unofficial tools for plex
  - Rutorrent - Romancin rutorrent, probably the best one.
  - More apps...
  - Cleaning .env file

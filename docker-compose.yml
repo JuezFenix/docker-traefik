@@ -880,6 +880,36 @@ services:
 
   ############################# DOWNLOADERS
 
+  # ruTorrent - Torrent management
+  jdownloader:
+    image: romancin/rutorrent:latest
+    container_name: $DOCKER_GROUP-rutorrent
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    # ports:
+    #   - "$RUTORRENT_PORT:443"
+    #   - "51415-51415:51415-51415"  
+    volumes:
+      - $USERDIR/Downloads:/output
+      - $DOCKERDIR/jdownloader:/config
+    environment:
+      PUID: $PUID
+      PGID: $PGID
+      TZ: $TZ
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.rutorrent-rtr.entrypoints=https"
+      - "traefik.http.routers.rutorrent-rtr.rule=Host(`rutorrent.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.rutorrent-rtr.middlewares=chain-oauth@file"
+      ## HTTP Services
+      - "traefik.http.routers.rutorrent-rtr.service=rutorrent-svc"
+      - "traefik.http.services.rutorrent-svc.loadbalancer.server.port=443"
+
   # jDownloader - Download management
   jdownloader:
     image: jlesage/jdownloader-2:latest
