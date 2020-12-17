@@ -68,7 +68,7 @@ services:
   # chmod 600 $DOCKERDIR/traefik2/acme/acme.json
   # touch $DOCKERDIR/traefik2/traefik.log
   traefik:
-    container_name: traefik
+    container_name: $DOCKER_GROUP-traefik
     image: traefik:picodon # chevrotin # the chevrotin tag refers to v2.2.x
     restart: unless-stopped
     command: # CLI arguments
