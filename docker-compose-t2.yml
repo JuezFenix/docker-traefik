@@ -182,7 +182,7 @@ services:
 
   # Docker Socket Proxy - Security Enchanced Proxy for Docker Socket
   socket-proxy:
-    container_name: socket-proxy
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-socket-proxy
     image: fluencelabs/docker-socket-proxy
     restart: always
     networks:
@@ -239,7 +239,7 @@ services:
   # https://hub.docker.com/r/thomseddon/traefik-forward-auth
   # https://www.smarthomebeginner.com/google-oauth-with-traefik-docker/
   oauth:
-    container_name: oauth
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-oauth
     image: thomseddon/traefik-forward-auth:latest
     # image: thomseddon/traefik-forward-auth:2.1-arm # Use this image with Raspberry Pi
     restart: unless-stopped
@@ -284,7 +284,7 @@ services:
 
   # Authelia (Lite) - Self-Hosted Single Sign-On and Two-Factor Authentication
   authelia:
-    container_name: authelia
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-authelia
     # Check this before upgrading: https://github.com/authelia/authelia/blob/master/BREAKING.md
     image: authelia/authelia:latest
     restart: always
@@ -324,7 +324,7 @@ services:
 
   # Organizr - Unified Frontend
   organizr:
-    container_name: organizr
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-organizr
     image: organizrtools/organizr-v2:latest
     restart: unless-stopped
     networks:
@@ -357,7 +357,7 @@ services:
   # Heimdall - Unified Frontend Alternative
   # Putting all services behind Oragnizr slows things down.
   heimdall:
-    container_name: heimdall
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-heimdall
     image: linuxserver/heimdall:latest
     restart: unless-stopped
     networks:
@@ -385,7 +385,7 @@ services:
 
   # Autoindex - Simple Directory Index
   autoindex:
-    container_name: autoindex
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-autoindex
     image: dceoy/nginx-autoindex:latest
     restart: always
     networks:
@@ -412,7 +412,7 @@ services:
   # Home Assistant Core - Home Automation
   # Added temporarily since HASS.io (Home Assistant Supervised) on Docker has been deprecated.
   homeassistant:
-    container_name: hass-core
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-hass-core
     restart: unless-stopped
     image: homeassistant/home-assistant:0.113.3
     network_mode: host
@@ -438,7 +438,7 @@ services:
   # Home Assistant Core - Home Automation
   # Added temporarily since HASS.io (Home Assistant Supervised) on Docker has been deprecated.
   hassio:
-    container_name: hassio
+    container_name: $DOCKER_GROUP-$DOCKER_GROUP-hassio
     restart: unless-stopped
     image: homeassistant/home-assistant:0.111.0
     networks:
@@ -469,7 +469,7 @@ services:
   # MotionEye - Video Surveillance
   motioneye:
     image: ccrisan/motioneye:master-amd64
-    container_name: motioneye
+    container_name: $DOCKER_GROUP-motioneye
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -515,7 +515,7 @@ services:
   # Create a new user with admin privileges. Cannot login as MySQL root for some reason.
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
-    container_name: phpmyadmin
+    container_name: $DOCKER_GROUP-phpmyadmin
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -548,7 +548,7 @@ services:
 
   # Redis Commander - Redis Management Tool
   rediscommander:
-    container_name: rediscommander
+    container_name: $DOCKER_GROUP-rediscommander
     image: rediscommander/redis-commander:latest
     restart: unless-stopped
     networks:
@@ -574,7 +574,7 @@ services:
   # Grafana - Graphical data visualization for InfluxDB data
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    container_name: $DOCKER_GROUP-grafana
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -603,7 +603,7 @@ services:
   # jDownloader - Download management
   jdownloader:
     image: jlesage/jdownloader-2:latest
-    container_name: jdownloader
+    container_name: $DOCKER_GROUP-jdownloader
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -639,7 +639,7 @@ services:
   # ONLY ACCESSIBLE THROUGH https://domain.com/transmission/web/ if using PathPrefix
   transmission-vpn:
     image: haugene/transmission-openvpn:latest
-    container_name: transmission-vpn
+    container_name: $DOCKER_GROUP-transmission-vpn
     restart: always
     networks:
       # - t2_proxy
@@ -707,7 +707,7 @@ services:
   # Needs trailing / if using PathPrefix
   sabnzbd:
     image: linuxserver/sabnzbd:latest
-    container_name: sabnzbd
+    container_name: $DOCKER_GROUP-sabnzbd
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -748,7 +748,7 @@ services:
   # Set url_base in Jackett settings if using PathPrefix
   jackett:
     image: linuxserver/jackett:latest
-    container_name: jackett
+    container_name: $DOCKER_GROUP-jackett
     restart: always
     # network_mode: container:transmission-vpn
     networks:
@@ -779,7 +779,7 @@ services:
   # NZBHydra2 - NZB meta search
   hydra:
     image: linuxserver/nzbhydra2:latest
-    container_name: hydra
+    container_name: $DOCKER_GROUP-hydra
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -811,7 +811,7 @@ services:
   # Set url_base in lidarr settings if using PathPrefix
   lidarr:
     image: linuxserver/lidarr:latest
-    container_name: lidarr
+    container_name: $DOCKER_GROUP-lidarr
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -851,7 +851,7 @@ services:
   radarr:
     # image: aront/radarr #for mp4_automator support
     image: linuxserver/radarr:nightly
-    container_name: radarr
+    container_name: $DOCKER_GROUP-radarr
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -892,7 +892,7 @@ services:
   sonarr:
     # image: aront/sonarr  #for mp4_automator support
     image: linuxserver/sonarr:preview
-    container_name: sonarr
+    container_name: $DOCKER_GROUP-sonarr
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -931,7 +931,7 @@ services:
   # Lazylibrarian  – Ebooks and Management
   lazylibrarian:
     image: linuxserver/lazylibrarian
-    container_name: lazylibrarian
+    container_name: $DOCKER_GROUP-lazylibrarian
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -966,7 +966,7 @@ services:
   # Calibre-web  – Ebooks and Management (Plex of Ebooks)
   calibre-web:
     image: linuxserver/calibre-web
-    container_name: calibre-web
+    container_name: $DOCKER_GROUP-calibre-web
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -999,7 +999,7 @@ services:
   # Calibre  – Ebooks and Management (Server)
   calibre:
     image: linuxserver/calibre
-    container_name: calibre
+    container_name: $DOCKER_GROUP-calibre
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1033,7 +1033,7 @@ services:
 
   # AirSonic - Music Server
   airsonic:
-    container_name: airsonic
+    container_name: $DOCKER_GROUP-airsonic
     image: linuxserver/airsonic:latest
     restart: unless-stopped
     networks:
@@ -1068,7 +1068,7 @@ services:
   # Plex - Media Server
   plexms:
     image: plexinc/pms-docker:public
-    container_name: plexms
+    container_name: $DOCKER_GROUP-plexms
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1116,7 +1116,7 @@ services:
   # Emby - Media Server
   embyms:
     image: emby/embyserver:latest
-    container_name: embyms
+    container_name: $DOCKER_GROUP-embyms
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1152,7 +1152,7 @@ services:
   # Jellyfin - Media Server
   jellyfin:
     image: jellyfin/jellyfin:latest
-    container_name: jellyfin
+    container_name: $DOCKER_GROUP-jellyfin
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1187,7 +1187,7 @@ services:
   # Ombi - Media Requests
   ombi:
     image: linuxserver/ombi:latest
-    container_name: ombi
+    container_name: $DOCKER_GROUP-ombi
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1217,7 +1217,7 @@ services:
   # Set HTTP Root in Tautulli settings if using PathPrefix
   tautulli:
     image: linuxserver/tautulli:latest
-    container_name: tautulli
+    container_name: $DOCKER_GROUP-tautulli
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1246,7 +1246,7 @@ services:
   # Plex-Sync - For Syncing watched status between plex servers
   plex-sync:
     image: patsissons/plex-sync:develop
-    container_name: plex-sync
+    container_name: $DOCKER_GROUP-plex-sync
     security_opt:
       - no-new-privileges:true
     environment:
@@ -1259,7 +1259,7 @@ services:
   # PhotoShow - Image Gallery
   photoshow:
     image: linuxserver/photoshow:latest
-    container_name: photoshow
+    container_name: $DOCKER_GROUP-photoshow
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1291,7 +1291,7 @@ services:
   # Bazarr - Subtitle Management
   bazarr:
     image: linuxserver/bazarr:latest
-    container_name: bazarr
+    container_name: $DOCKER_GROUP-bazarr
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1320,7 +1320,7 @@ services:
   # Picard - Music Library Tagging and Management
   picard:
     image: mikenye/picard:latest
-    container_name: picard
+    container_name: $DOCKER_GROUP-picard
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1354,7 +1354,7 @@ services:
   # Handbrake - Video Conversion (Transcoding and compression)
   handbrake:
     image: jlesage/handbrake:latest
-    container_name: handbrake
+    container_name: $DOCKER_GROUP-handbrake
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1392,7 +1392,7 @@ services:
   # MKVToolNix - Video Editing (Remuxing - changing media container while keeping original source quality)
   mkvtoolnix:
     image: jlesage/mkvtoolnix:latest
-    container_name: mkvtoolnix
+    container_name: $DOCKER_GROUP-mkvtoolnix
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1427,7 +1427,7 @@ services:
   # MakeMKV - Video Editing (Ripping from Disks)
   makemkv:
     image: jlesage/makemkv:latest
-    container_name: makemkv
+    container_name: $DOCKER_GROUP-makemkv
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1464,7 +1464,7 @@ services:
   # FileBot - File renamer
   filebot:
     image: jlesage/filebot:latest
-    container_name: filebot
+    container_name: $DOCKER_GROUP-filebot
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1504,7 +1504,7 @@ services:
   # Healthchecks
   healthchecks:
     image: linuxserver/healthchecks:latest
-    container_name: healthchecks
+    container_name: $DOCKER_GROUP-healthchecks
     restart: always
     networks:
       - t2_proxy
@@ -1542,7 +1542,7 @@ services:
   # Duplicati - Backup
   duplicati:
     image: linuxserver/duplicati:latest
-    container_name: duplicati
+    container_name: $DOCKER_GROUP-duplicati
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1574,7 +1574,7 @@ services:
   # VNC password not working - check
   firefox:
     image: jlesage/firefox:latest
-    container_name: firefox
+    container_name: $DOCKER_GROUP-firefox
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1613,7 +1613,7 @@ services:
   # Glances - System Information
   glances:
     image: nicolargo/glances:latest
-    container_name: glances
+    container_name: $DOCKER_GROUP-glances
     restart: unless-stopped
     privileged: true
     # network_mode: host
@@ -1649,7 +1649,7 @@ services:
   # create the apcupsd.conf file
   apcupsd:
     image: gersilex/apcupsd:latest
-    container_name: apcupsd
+    container_name: $DOCKER_GROUP-apcupsd
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1668,7 +1668,7 @@ services:
   # qDirStat - Directory Statistics
   qdirstat:
     image: jlesage/qdirstat:latest
-    container_name: qdirstat
+    container_name: $DOCKER_GROUP-qdirstat
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1705,7 +1705,7 @@ services:
   # Create all databases and tables first
   guacamole:
     image: guacamole/guacamole:latest
-    container_name: guacamole
+    container_name: $DOCKER_GROUP-guacamole
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1739,7 +1739,7 @@ services:
   # Guacamole Daemon - Needed for Guacamole
   guacd:
     image: guacamole/guacd
-    container_name: guacd
+    container_name: $DOCKER_GROUP-guacd
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1749,7 +1749,7 @@ services:
   # Dozzle - Real-time Docker Log Viewer
   dozzle:
     image: amir20/dozzle:latest
-    container_name: dozzle
+    container_name: $DOCKER_GROUP-dozzle
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1782,7 +1782,7 @@ services:
   # StatPing - Status Page & Monitoring Server
   statping:
     image: hunterlong/statping:latest
-    container_name: statping
+    container_name: $DOCKER_GROUP-statping
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1818,7 +1818,7 @@ services:
   # VSCode - VSCode Editing
   vscode:
     image: codercom/code-server:latest
-    container_name: vscode
+    container_name: $DOCKER_GROUP-vscode
     restart: unless-stopped
     networks:
       - t2_proxy
@@ -1852,7 +1852,7 @@ services:
   # Use case: https://github.com/htpcBeginner/docker-traefik/issues/78
   smtp_to_telegram:
     image: kostyaesmukov/smtp_to_telegram
-    container_name: smtp_to_telegram
+    container_name: $DOCKER_GROUP-smtp_to_telegram
     restart: always
     networks:
       - default
@@ -1867,7 +1867,7 @@ services:
   # WatchTower - Automatic Docker Container Updates
   watchtower:
     image: containrrr/watchtower
-    container_name: watchtower
+    container_name: $DOCKER_GROUP-watchtower
     restart: unless-stopped
     networks:
       - default
@@ -1891,7 +1891,7 @@ services:
   # Create docker-gc-exclude file
   dockergc:
     image: clockworksoul/docker-gc-cron:latest
-    container_name: docker-gc
+    container_name: $DOCKER_GROUP-docker-gc
     restart: unless-stopped
     networks:
       - socket_proxy
@@ -1912,7 +1912,7 @@ services:
 
   # Traefik Certs Dumper - Extract LetsEncrypt Certificates - Traefik2 Compatible
   certdumper:
-    container_name: traefik_certdumper
+    container_name: $DOCKER_GROUP-traefik_certdumper
     image: humenius/traefik-certs-dumper:latest
     network_mode: none
     security_opt:
@@ -1930,7 +1930,7 @@ services:
 
   # Cloudflare-Companion - Automatic CNAME DNS Creation
   cf-companion:
-    container_name: cf-companion
+    container_name: $DOCKER_GROUP-cf-companion
     image: tiredofit/traefik-cloudflare-companion:latest
     security_opt:
       - no-new-privileges:true
