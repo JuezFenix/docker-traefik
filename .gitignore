@@ -14,6 +14,7 @@
 !shared
 shared/*
 !shared/*.example
+!config
 !config/picard
 config/picard/*
 !picard/*.example
@@ -27,3 +28,6 @@ config/traefik2/rules/*
 !config/authelia
 config/authelia/*
 !config/authelia/*.example
+!secrets
+secrets/*
+!secrets/*.example
