@@ -162,7 +162,7 @@ First, install Docker and Docker Compose.
 
 ## ToDo - New Apps Coming
 
- -TellyTv- IPTV proxy for Plex
+ - TellyTv- IPTV proxy for Plex
  - Plex + plexdrive - Rapejim combo for plex
  - Plex web tools - Unofficial tools for plex
  - Rutorrent - Romancin rutorrent, probably the best one.
