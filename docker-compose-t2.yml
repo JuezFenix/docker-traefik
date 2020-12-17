@@ -533,7 +533,7 @@ services:
 
   # Redis - Key-value Store
   redis:
-    container_name: redis
+    container_name: $DOCKER_GROUP-redis
     image: redis:6.0.6
     restart: unless-stopped
     entrypoint: redis-server --appendonly yes --requirepass $REDIS_PASSWORD --maxmemory 512mb --maxmemory-policy allkeys-lru
@@ -2041,10 +2041,7 @@ services:
   # PHP - Hypertext Preprocessor
   php7:
     container_name: $DOCKER_GROUP-php7
-    image: php:7.4-fpm-custom
-    build:
-      context: $DOCKERDIR/custom/
-      dockerfile: Dockerfile-php7
+    image: php:fpm-alpine
     restart: unless-stopped
     user: $PUID:$PGID # allows upgrading WP and plugins
     networks:
