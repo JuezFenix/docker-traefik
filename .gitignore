@@ -28,6 +28,9 @@ config/traefik2/rules/*
 !config/authelia
 config/authelia/*
 !config/authelia/*.example
+!config/picard
+config/picard/*
+!config/picard/*.example
 !secrets
 secrets/*
 !secrets/*.example
