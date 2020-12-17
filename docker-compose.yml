@@ -1498,6 +1498,35 @@ services:
       - "traefik.http.routers.xteve-rtr.service=xteve-svc"
       - "traefik.http.services.xteve-svc.loadbalancer.server.port=34400"
 
+telly:
+  image: tellytv/telly
+  container_name: $DOCKER_GROUP-telly
+  restart: unless-stopped
+  networks:
+      - t2_proxy
+  ports:
+    - "$TELLY_PORT:6077"
+  environment:
+    - TZ=$TZ
+    - TELLY_IPTV_PLAYLIST=$TELLY_M3U
+    - TELLY_FILTER_REGEX=''
+    - TELLY_WEB_LISTEN_ADDRESS=telly:6077
+    - TELLY_IPTV_STREAMS=1
+    - TELLY_DISCOVERY_FRIENDLYNAME=Tuner1
+    - TELLY_DISCOVERY_DEVICEID=12345678
+  command: -base=telly:6077
+  labels:
+     - "traefik.enable=true"
+     ## HTTP Routers
+     - "traefik.http.routers.telly-rtr.entrypoints=https"
+     - "traefik.http.routers.telly-rtr.rule=Host(`telly.$DOMAINNAME`)"
+     - "traefik.http.routers.telly-rtr.tls=true"
+     ## Middlewares
+     - "traefik.http.routers.telly-rtr.middlewares=chain-authelia@file"
+     ## HTTP Services
+     - "traefik.http.routers.telly-rtr.service=xteve-svc"
+     - "traefik.http.services.telly-svc.loadbalancer.server.port=6077"
+
   # Emby - Media Server
   embyms:
     image: emby/embyserver:latest

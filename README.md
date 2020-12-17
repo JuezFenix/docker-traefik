@@ -91,6 +91,7 @@ See the corresponding Docker Compose file for the compose snippet.
 - Plex-Sync - For Syncing watched status between plex servers (LINUX)
 - PhotoShow - Personal Photo Gallery and viewer (LINUX)
 - xTeve- IPTV proxy for Plex (LINUX)
+ - TellyTv- IPTV proxy for Plex (LINUX)
 
 ### MEDIA FILE MANAGEMENT
 
@@ -163,6 +164,4 @@ First, install Docker and Docker Compose.
 
 ## ToDo - New Apps Coming
 
- - TellyTv- IPTV proxy for Plex
  - More apps...
- - Cleaning .env file
