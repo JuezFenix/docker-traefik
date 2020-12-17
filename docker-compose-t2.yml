@@ -508,19 +508,44 @@ services:
       - "traefik.http.services.motioneye-svc.loadbalancer.server.port=8765"
 
   ############################# DATABASE
-  # Mariadb moved to NAS
+
+  # MariaDB - MySQL Database
+  # After starting container for first time dexec and mysqladmin -u root password <password>
   mariadb:
-    image: ghcr.io/linuxserver/mariadb
     container_name: $DOCKER_GROUP-mariadb
-    environment:
-      - USER_ID: $PUID
-      - GROUP_ID: $PGID
-      - TZ: $TZ
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+    image: linuxserver/mariadb:110.4.14mariabionic-ls77
+    restart: always
+    networks:
+      t2_proxy:
+        ipv4_address: 192.168.90.250
+    security_opt:
+      - no-new-privileges:true
     volumes:
-      - $DOCKERDIR/mariadb:/config
-    ports:
-      - "$MARIADB_PORT:3306
+      - $DOCKERDIR/mariadb/data:/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password # Not taking this pw during initialization
+    secrets:
+      - mysql_root_password
+
+  # Redis - Key-value Store
+  redis:
+    container_name: redis
+    image: redis:6.0.6
+    restart: unless-stopped
+    entrypoint: redis-server --appendonly yes --requirepass $REDIS_PASSWORD --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - $DOCKERDIR/redis/data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
       
   # phpMyAdmin - Database management
   # Create a new user with admin privileges. Cannot login as MySQL root for some reason.
@@ -553,9 +578,6 @@ services:
       ## HTTP Services
       - "traefik.http.routers.phpmyadmin-rtr.service=phpmyadmin-svc"
       - "traefik.http.services.phpmyadmin-svc.loadbalancer.server.port=80"
-
-  # Redis - Key-value Store
-  # Moved to NAS
 
   # Redis Commander - Redis Management Tool
   rediscommander:
@@ -1966,3 +1988,106 @@ services:
       # Add hosts specified in rules here to force cf-companion to create the CNAMEs
       # Since cf-companion creates CNAMEs based on host rules, this a workaround for non-docker/external apps
       - "traefik.http.routers.cf-companion-rtr.rule=Host(`portainer.$DOMAINNAME`) || `synglances.$DOMAINNAME`) || `pihole.$DOMAINNAME`) || Host(`shell.$DOMAINNAME`) || Host(`syno.$DOMAINNAME`) || Host(`webmin.$DOMAINNAME`) || Host(`synplex.$DOMAINNAME`) || Host(`pwt.$DOMAINNAME`)"
+
+########################### WEB
+
+  # Nginx - Web Server
+  nginx:
+    container_name: $DOCKER_GROUP-nginx
+    image: nginx:1.18
+    restart: unless-stopped
+    depends_on:
+      - php7
+    networks:
+      - t2_proxy
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - /var/log/nginx:/var/log/nginx
+      - $DOCKERDIR/nginx:/etc/nginx
+      - $DOCKERDIR/shared/.htpassd:/shared/.htpasswd
+      - $DOCKERDIR/sites/shb/html:/var/www/html/shb
+      - $DOCKERDIR/sites/khub/html:/var/www/html/khub
+      - $DOCKERDIR/sites/dash/html:/var/www/html/dash
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers SHB
+      - "traefik.http.routers.nginx-shb-rtr.entrypoints=https"
+      - "traefik.http.routers.nginx-shb-rtr.rule=HostHeader(`$DOMAINNAME`) || HostHeader(`www.$DOMAINNAME`)"
+      ## HTTP Routers DASH
+      - "traefik.http.routers.nginx-dash-rtr.entrypoints=https"
+      - "traefik.http.routers.nginx-dash-rtr.rule=HostHeader(`dash.$DOMAINNAME`)"
+      ## HTTP Routers KHUB
+      - "traefik.http.routers.nginx-khub-rtr.entrypoints=https"
+      - "traefik.http.routers.nginx-khub-rtr.rule=HostHeader(`$DOMAINNAME1`) || HostHeader(`www.$DOMAINNAME1`)"
+      ## Middlewares
+      - "traefik.http.routers.nginx-khub-rtr.middlewares=khub-redirect,chain-no-auth@file"
+      - "traefik.http.routers.nginx-shb-rtr.middlewares=shb-redirect,chain-authelia-wp@file"
+      - "traefik.http.routers.nginx-dash-rtr.middlewares=chain-authelia@file"
+      # Redirect shb non-www to www middleware
+      - "traefik.http.middlewares.shb-redirect.redirectregex.regex=^https?://$DOMAINNAME/(.*)"
+      - "traefik.http.middlewares.shb-redirect.redirectregex.replacement=https://www.$DOMAINNAME/$${1}"
+      - "traefik.http.middlewares.shb-redirect.redirectregex.permanent=true"
+      # Redirect khub non-www to www middleware
+      - "traefik.http.middlewares.khub-redirect.redirectregex.regex=^https?://$DOMAINNAME1/(.*)"
+      - "traefik.http.middlewares.khub-redirect.redirectregex.replacement=https://www.$DOMAINNAME1/$${1}"
+      - "traefik.http.middlewares.khub-redirect.redirectregex.permanent=true"
+      ## HTTP Services
+      - "traefik.http.routers.nginx-shb-rtr.service=nginx-svc"
+      - "traefik.http.routers.nginx-khub-rtr.service=nginx-svc"
+      - "traefik.http.routers.nginx-dash-rtr.service=nginx-svc"
+      - "traefik.http.services.nginx-svc.loadbalancer.server.port=80"
+
+  # PHP - Hypertext Preprocessor
+  php7:
+    container_name: $DOCKER_GROUP-php7
+    image: php:7.4-fpm-custom
+    build:
+      context: $DOCKERDIR/custom/
+      dockerfile: Dockerfile-php7
+    restart: unless-stopped
+    user: $PUID:$PGID # allows upgrading WP and plugins
+    networks:
+      - t2_proxy
+    volumes:
+      - $DOCKERDIR/sites/shb/html:/var/www/html/shb
+      - $DOCKERDIR/php/php7:/usr/local/etc/php
+      - $DOCKERDIR/sites/khub/html:/var/www/html/khub
+      - $DOCKERDIR/sites/dash/html:/var/www/html/dash
+
+  ########################### MONITORING
+
+  # Glances - System Information
+  glances:
+    image: nicolargo/glances:latest
+    container_name: $DOCKER_GROUP-glances
+    restart: unless-stopped
+    privileged: true
+    # network_mode: host
+    networks:
+      - t2_proxy
+      - socket_proxy
+    # depends_on:
+    #   - socket-proxy
+    security_opt:
+      - no-new-privileges:true
+    # ports:
+    #   - "$GLANCES_PORT:61208"
+    pid: host
+    volumes:
+      - $DOCKERDIR/glances/glances.conf:/glances/conf/glances.conf # Use this if you want to add a glances.conf file
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
+    environment:
+      # GLANCES_OPT: "-C /glances/conf/glances.conf --quiet --export influxdb"
+      GLANCES_OPT: "-w"
+      DOCKER_HOST: tcp://socket-proxy:2375
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.glances-rtr.entrypoints=https"
+      - "traefik.http.routers.glances-rtr.rule=HostHeader(`glances.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.glances-rtr.middlewares=chain-authelia@file"
+      ## HTTP Services
+      - "traefik.http.routers.glances-rtr.service=glances-svc"
+      - "traefik.http.services.glances-svc.loadbalancer.server.port=61208"
