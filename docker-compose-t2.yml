@@ -521,7 +521,7 @@ services:
       - $DOCKERDIR/mariadb:/config
     ports:
       - "$MARIADB_PORT:3306
-
+      
   # phpMyAdmin - Database management
   # Create a new user with admin privileges. Cannot login as MySQL root for some reason.
   phpmyadmin:
