@@ -140,10 +140,10 @@ services:
       #  protocol: tcp
       #  mode: host
     volumes:
-      - $DOCKERDIR/config/traefik2/rules:/rules # file provider directory
+      - $DOCKERDIR/traefik2/rules:/rules # file provider directory
       # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
-      - $DOCKERDIR/config/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
-      - $DOCKERDIR/config/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting container
+      - $DOCKERDIR/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
+      - $DOCKERDIR/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting container
       - $DOCKERDIR/shared:/shared
     environment:
       - CF_API_EMAIL_FILE=/run/secrets/cloudflare_email
@@ -192,6 +192,49 @@ services:
       # HTTP Services
       - "traefik.http.routers.traefik-error-pages-rtr.service=traefik-error-pages-svc"
       - "traefik.http.services.traefik-error-pages-svc.loadbalancer.server.port=80"
+
+  pihole:
+    container_name: $DOCKER_GROUP-pihole
+    hostname: pihole
+    domainname: docker
+    image: pihole/pihole:latest
+    ports:
+      - '53:53/tcp'
+      - '53:53/udp'
+      # - '67:67/udp'
+      - '$PIHOLE_PORT:80'
+      - '$PIHOLE_SSL_PORT:443'
+    restart: unless-stopped
+    volumes:
+      - $DOCKERDIR/docker/pihole/pihole:/etc/pihole
+      # - $$DOCKERDIR/docker/pihole/pihole.log:/var/log/pihole.log
+      - $DOCKERDIR/docker/pihole/dnsmasq.d:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - ServerIP=${SERVER_IP}
+      - PROXY_LOCATION=pihole
+      - VIRTUAL_HOST=pihole.${DOMAINNAME}
+      - VIRTUAL_PORT=80
+      - TZ=$TZ
+      - WEBPASSWORD=$PIHOLE_WEB_PASSWORD
+      - DNS1=127.0.0.1
+      - DNS2=1.1.1.1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=pihole"
+      - "traefik.port=80"
+      - "traefik.frontend.rule=HostRegexp:pihole.${DOMAINNAME},{catchall:.*}"
+      - "traefik.frontend.priority=1"
+      - traefik.frontend.headers.SSLRedirect=true
+      - traefik.frontend.headers.STSSeconds=315360000
+      - traefik.frontend.headers.browserXSSFilter=true
+      - traefik.frontend.headers.contentTypeNosniff=true
+      - traefik.frontend.headers.forceSTSHeader=true
+      - traefik.frontend.headers.SSLHost=${DOMAINNAME}
+      - traefik.frontend.headers.STSIncludeSubdomains=true
+      - traefik.frontend.headers.STSPreload=true
+      - traefik.frontend.headers.frameDeny=true
 
   # Docker Socket Proxy - Security Enchanced Proxy for Docker Socket
   socket-proxy:
@@ -306,7 +349,7 @@ services:
     # ports:
     #   - "9091:9091"
     volumes:
-      - $DOCKERDIR/config/authelia:/config
+      - $DOCKERDIR/authelia:/config
     environment:
       - TZ=$TZ
       - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
@@ -334,7 +377,7 @@ services:
 
   # Portainer - WebUI for Containers
   portainer:
-    container_name: portainer
+    container_name: $DOCKER_GROUP-portainer
     image: portainer/portainer-ce:latest
     restart: unless-stopped
     # command: -H unix:///var/run/docker.sock # # Use Docker Socket Proxy instead for improved security
@@ -1672,7 +1715,7 @@ services:
     #   - "$PICARD_PORT:5800"
     volumes:
       - $USERDIR/Downloads/wip_media:/wip_media:rw
-      - $DOCKERDIR/config/picard:/config:rw
+      - $DOCKERDIR/picard:/config:rw
       - /media/ds918/media/music:/music:rw
       - /dev/shm:/dev/shm
     environment:
