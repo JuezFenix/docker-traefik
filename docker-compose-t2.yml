@@ -149,10 +149,10 @@ services:
       #  protocol: tcp
       #  mode: host
     volumes:
-      - $DOCKERDIR/traefik2/rules:/rules # file provider directory
+      - $DOCKERDIR/config/traefik2/rules:/rules # file provider directory
       # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
-      - $DOCKERDIR/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
-      - $DOCKERDIR/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting container
+      - $DOCKERDIR/config/traefik2/acme/acme.json:/acme.json # cert location - you must touch this file and change permissions to 600
+      - $DOCKERDIR/config/traefik2/traefik.log:/traefik.log # for fail2ban - make sure to touch file before starting container
       - $DOCKERDIR/shared:/shared
     environment:
       - CF_API_EMAIL_FILE=/run/secrets/cloudflare_email
@@ -293,7 +293,7 @@ services:
     # ports:
     #   - "9091:9091"
     volumes:
-      - $DOCKERDIR/authelia:/config
+      - $DOCKERDIR/config/authelia:/config
     environment:
       - TZ=$TZ
       - AUTHELIA_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
@@ -1363,7 +1363,7 @@ services:
     #   - "$PICARD_PORT:5800"
     volumes:
       - $USERDIR/Downloads/wip_media:/wip_media:rw
-      - $DOCKERDIR/picard:/config:rw
+      - $DOCKERDIR/config/picard:/config:rw
       - /media/ds918/media/music:/music:rw
       - /dev/shm:/dev/shm
     environment:
