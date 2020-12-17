@@ -35,6 +35,7 @@ config/picard/*
 !config/influxdb
 config/influxdb/*
 !config/influxdb/*.example
+config/*
 !secrets
 secrets/*
 !secrets/*.example

@@ -1347,13 +1347,14 @@ services:
 
   # Plex - Media Server
   plexms:
-    image: plexinc/pms-docker:public
+    image: rapejim/pms-plexdrive-docker
     container_name: $DOCKER_GROUP-plexms
     restart: unless-stopped
     networks:
       - t2_proxy
     devices:
       - /dev/dri:/dev/dri # for harware transcoding
+      - /dev/fuse:/dev/fuse
     security_opt:
       - no-new-privileges:true
     ports:
@@ -1370,9 +1371,7 @@ services:
     volumes:
       - $DOCKERDIR/plexms:/config
       - $USERDIR/Downloads:/Downloads
-      - /media:/nas
       - /dev/shm:/transcode # Offload transcoding to RAM if you have enough RAM
-    #   - $USERDIR/Downloads/plex_tmp:/transcode
     environment:
       TZ: $TZ
       HOSTNAME: "nucPlex"
