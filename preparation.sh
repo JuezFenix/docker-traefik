@@ -42,4 +42,4 @@ cp secrets/oauth_secret.example secrets/oauth_secret
 cp secrets/plex_claim.example secrets/plex_claim
 
 echo "Downloading WebTools for Plex"
-mkdir -p config/plexms/Library/Application\ Support/Plex\ Media\ Server/Plug-ins && wget https://github.com/ukdtom/WebTools.bundle/releases/download/3.0.0/WebTools.bundle.zip && unzip WebTools.bundle.zip && rm WebTools.bundle.zip
+mkdir -p config/plexms/Library/Application\ Support/Plex\ Media\ Server/Plug-ins && cd config/plexms/Library/Application\ Support/Plex\ Media\ Server/Plug-ins && wget https://github.com/ukdtom/WebTools.bundle/releases/download/3.0.0/WebTools.bundle.zip && unzip WebTools.bundle.zip && rm WebTools.bundle.zip
