@@ -2,12 +2,10 @@
 */
 !.gitignore
 !.bash_aliases.example
-!docker-compose-t2.yml
-!docker-compose-t2-vpn.yml
-!docker-compose-t2-obsolete.yml
-!docker-compose-t2-synology.yml
-!docker-compose-t2-web.yml
+!docker-compose.yml
+!docker-compose-synology.yml
 !.env.example
+!preparation.sh
 .env
 !README.md
 !LICENSE

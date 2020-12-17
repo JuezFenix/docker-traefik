@@ -64,7 +64,7 @@ services:
     restart: unless-stopped
     command: # CLI arguments
       - --global.checkNewVersion=true
-      - --global.sendAnonymousUsage=true
+      - --global.sendAnonymousUsage=false
       - --entryPoints.http.address=:80
       - --entryPoints.https.address=:443
       # Allow these IPs to set the X-Forwarded-* headers - Cloudflare IPs: https://www.cloudflare.com/ips/
@@ -171,9 +171,31 @@ services:
       ## Middlewares
       - "traefik.http.routers.traefik-rtr.middlewares=chain-oauth@file"
 
+  # Traefik - Custom Error Pages
+  traefik-error-pages:
+    container_name: $DOCKER_GROUP-traefik-error-pages
+    image: guillaumebriday/traefik-custom-error-pages
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    labels:
+      - "traefik.enable=true"
+      # HTTP Routers
+      - "traefik.http.routers.traefik-error-pages-rtr.entrypoints=https"
+      - "traefik.http.routers.traefik-error-pages-rtr.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.traefik-error-pages-rtr.priority=1"
+      # Middlewares
+      - "traefik.http.routers.traefik-error-pages-rtr.middlewares=traefik-error-pages"
+      - "traefik.http.middlewares.traefik-error-pages.errors.service=traefik-error-pages-svc"
+      - "traefik.http.middlewares.traefik-error-pages.errors.status=401,403,404,429,500,502,503"
+      - "traefik.http.middlewares.traefik-error-pages.errors.query=/{status}.html"
+      # HTTP Services
+      - "traefik.http.routers.traefik-error-pages-rtr.service=traefik-error-pages-svc"
+      - "traefik.http.services.traefik-error-pages-svc.loadbalancer.server.port=80"
+
   # Docker Socket Proxy - Security Enchanced Proxy for Docker Socket
   socket-proxy:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-socket-proxy
+    container_name: $DOCKER_GROUP-socket-proxy
     image: fluencelabs/docker-socket-proxy
     restart: always
     networks:
@@ -230,7 +252,7 @@ services:
   # https://hub.docker.com/r/thomseddon/traefik-forward-auth
   # https://www.smarthomebeginner.com/google-oauth-with-traefik-docker/
   oauth:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-oauth
+    container_name: $DOCKER_GROUP-oauth
     image: thomseddon/traefik-forward-auth:latest
     # image: thomseddon/traefik-forward-auth:2.1-arm # Use this image with Raspberry Pi
     restart: unless-stopped
@@ -275,7 +297,7 @@ services:
 
   # Authelia (Lite) - Self-Hosted Single Sign-On and Two-Factor Authentication
   authelia:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-authelia
+    container_name: $DOCKER_GROUP-authelia
     # Check this before upgrading: https://github.com/authelia/authelia/blob/master/BREAKING.md
     image: authelia/authelia:latest
     restart: always
@@ -311,11 +333,38 @@ services:
       - "traefik.http.services.authelia-svc.loadbalancer.server.port=9091"
 
   # Portainer - WebUI for Containers
-  # Moved to NAS and added this stack as to Portainer as a separate endpoint.
-
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    # command: -H unix:///var/run/docker.sock # # Use Docker Socket Proxy instead for improved security
+    # command: -H tcp://socket-proxy:2375 # appears to not work. Workaround was to create a new socket-proxy:2375 endpoint on portainer settings
+    networks:
+      - t2_proxy
+      - socket_proxy
+    depends_on:
+      - socket-proxy
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # # Use Docker Socket Proxy instead for improved security
+      - $DOCKERDIR/portainer/data:/data # Change to local directory if you want to save/transfer config locally
+    environment:
+      - TZ=$TZ
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.portainer-rtr.entrypoints=https"
+      - "traefik.http.routers.portainer-rtr.rule=HostHeader(`portainer.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.portainer-rtr.middlewares=chain-authelia@file" # Authelia
+      ## HTTP Services
+      - "traefik.http.routers.portainer-rtr.service=portainer-svc"
+      - "traefik.http.services.portainer-svc.loadbalancer.server.port=9000"
+      
   # Organizr - Unified Frontend
   organizr:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-organizr
+    container_name: $DOCKER_GROUP-organizr
     image: organizrtools/organizr-v2:latest
     restart: unless-stopped
     networks:
@@ -348,7 +397,7 @@ services:
   # Heimdall - Unified Frontend Alternative
   # Putting all services behind Oragnizr slows things down.
   heimdall:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-heimdall
+    container_name: $DOCKER_GROUP-heimdall
     image: linuxserver/heimdall:latest
     restart: unless-stopped
     networks:
@@ -376,7 +425,7 @@ services:
 
   # Autoindex - Simple Directory Index
   autoindex:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-autoindex
+    container_name: $DOCKER_GROUP-autoindex
     image: dceoy/nginx-autoindex:latest
     restart: always
     networks:
@@ -403,7 +452,7 @@ services:
   # Home Assistant Core - Home Automation
   # Added temporarily since HASS.io (Home Assistant Supervised) on Docker has been deprecated.
   homeassistant:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-hass-core
+    container_name: $DOCKER_GROUP-hass-core
     restart: unless-stopped
     image: homeassistant/home-assistant:0.113.3
     network_mode: host
@@ -429,7 +478,7 @@ services:
   # Home Assistant Core - Home Automation
   # Added temporarily since HASS.io (Home Assistant Supervised) on Docker has been deprecated.
   hassio:
-    container_name: $DOCKER_GROUP-$DOCKER_GROUP-hassio
+    container_name: $DOCKER_GROUP-hassio
     restart: unless-stopped
     image: homeassistant/home-assistant:0.111.0
     networks:
@@ -536,7 +585,6 @@ services:
       - $DOCKERDIR/redis/data:/data
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-
       
   # phpMyAdmin - Database management
   # Create a new user with admin privileges. Cannot login as MySQL root for some reason.
@@ -595,6 +643,8 @@ services:
       - "traefik.http.routers.rediscommander-rtr.service=rediscommander-svc"
       - "traefik.http.services.rediscommander-svc.loadbalancer.server.port=8081"
 
+  ############################# MONITORING
+
   # Grafana - Graphical data visualization for InfluxDB data
   grafana:
     image: grafana/grafana:latest
@@ -621,6 +671,197 @@ services:
       ## HTTP Services
       - "traefik.http.routers.grafana-rtr.service=grafana-svc"
       - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
+
+  # Varken - Monitor Plex, Sonarr, Radarr, and Other Data
+  varken:
+    image: boerderij/varken
+    container_name: $DOCKER_GROUP-varken
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    volumes:
+      - $DOCKERDIR/varken:/config
+    environment:
+      PUID: $PUID
+      PGID: $PGID
+      TZ: $TZ
+      VRKN_GLOBAL_SONARR_SERVER_IDS: 1
+      VRKN_GLOBAL_RADARR_SERVER_IDS: 1
+      VRKN_GLOBAL_LIDARR_SERVER_IDS: "false"
+      VRKN_GLOBAL_TAUTULLI_SERVER_IDS: 1
+      VRKN_GLOBAL_OMBI_SERVER_IDS: "false"
+      VRKN_GLOBAL_SICKCHILL_SERVER_IDS: "false"
+      VRKN_GLOBAL_UNIFI_SERVER_IDS: 1
+      VRKN_INFLUXDB_URL: $SERVER_IP
+      VRKN_INFLUXDB_PORT: 8086
+      VRKN_INFLUXDB_SSL: "false"
+      VRKN_INFLUXDB_VERIFY_SSL: "false"
+      VRKN_INFLUXDB_USERNAME: $VARKEN_USER
+      VRKN_INFLUXDB_PASSWORD: $VARKEN_PASS
+      VRKN_TAUTULLI_1_URL: $SERVER_IP:$TAUTULLI_PORT
+      VRKN_TAUTULLI_1_FALLBACK_IP: 1.1.1.1
+      VRKN_TAUTULLI_1_APIKEY: $TAUTULLI_API_KEY
+      VRKN_TAUTULLI_1_SSL: "false"
+      VRKN_TAUTULLI_1_VERIFY_SSL: "false"
+      VRKN_TAUTULLI_1_GET_ACTIVITY: "true"
+      VRKN_TAUTULLI_1_GET_ACTIVITY_RUN_SECONDS: 30
+      VRKN_TAUTULLI_1_GET_STATS: "true"
+      VRKN_TAUTULLI_1_GET_STATS_RUN_SECONDS: 3600
+      VRKN_SONARR_1_URL: $SERVER_IP:$SONARR_PORT
+      VRKN_SONARR_1_APIKEY: $SONARR_API_KEY
+      VRKN_SONARR_1_SSL: "false"
+      VRKN_SONARR_1_VERIFY_SSL: "false"
+      VRKN_SONARR_1_MISSING_DAYS: 7
+      VRKN_SONARR_1_MISSING_DAYS_RUN_SECONDS: 300
+      VRKN_SONARR_1_FUTURE_DAYS: 1
+      VRKN_SONARR_1_FUTURE_DAYS_RUN_SECONDS: 300
+      VRKN_SONARR_1_QUEUE: "true"
+      VRKN_SONARR_1_QUEUE_RUN_SECONDS: 300
+      VRKN_RADARR_1_URL: $SERVER_IP:$RADARR_PORT
+      VRKN_RADARR_1_APIKEY: $RADARR_API_KEY
+      VRKN_RADARR_1_SSL: "false"
+      VRKN_RADARR_1_VERIFY_SSL: "false"
+      VRKN_RADARR_1_QUEUE: "true"
+      VRKN_RADARR_1_QUEUE_RUN_SECONDS: 300
+      VRKN_RADARR_1_GET_MISSING: "true"
+      VRKN_RADARR_1_GET_MISSING_RUN_SECONDS: 300
+      VRKN_UNIFI_1_URL: $UNIFI_HOST
+      VRKN_UNIFI_1_USERNAME: $UNIFI_USER
+      VRKN_UNIFI_1_PASSWORD: $UNIFI_PASS
+      VRKN_UNIFI_1_SITE: default
+      VRKN_UNIFI_1_USG_NAME: USG
+      VRKN_UNIFI_1_SSL: "true"
+      VRKN_UNIFI_1_VERIFY_SSL: "false"
+      VRKN_UNIFI_1_GET_USG_STATS_RUN_SECONDS: 300
+
+  # Healthchecks
+  healthchecks:
+    image: linuxserver/healthchecks:latest
+    container_name: $DOCKER_GROUP-healthchecks
+    restart: always
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "$HEALTHCHECKS_PORT:8000"
+    volumes:
+      - $DOCKERDIR/healthchecks:/config
+    environment:
+      PUID: $PUID
+      PGID: $PGID
+      TZ: $TZ
+      SITE_ROOT: "https://healthchecks.$DOMAINNAME"
+      EMAIL_HOST: "smtp_to_telegram"
+      EMAIL_PORT: "2525"
+      EMAIL_HOST_USER: "username" # smtp_to_telgram doesn't care what this is
+      EMAIL_HOST_PASSWORD: "password" # smtp_to_telgram doesn't care what this is
+      DEFAULT_FROM_EMAIL: "healthchecks@$DOMAINNAME"
+      ALLOWED_HOSTS: "*"
+      SITE_NAME: "$DOMAINNAME Healthchecks"
+      SUPERUSER_PASSWORD: "${HEALTHCHECKS_SUPERUSER_PASSWORD}"
+      SUPERUSER_EMAIL: "$MY_EMAIL"
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.healthchecks-rtr.entrypoints=https"
+      - "traefik.http.routers.healthchecks-rtr.rule=Host(`healthchecks.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.healthchecks-rtr.middlewares=chain-authelia@file"
+      ## HTTP Services
+      - "traefik.http.routers.healthchecks-rtr.service=healthchecks-svc"
+      - "traefik.http.services.healthchecks-svc.loadbalancer.server.port=8000"
+
+  # Glances - System Information
+  glances:
+    image: nicolargo/glances:latest
+    container_name: $DOCKER_GROUP-glances
+    restart: unless-stopped
+    privileged: true
+    # network_mode: host
+    networks:
+      - t2_proxy
+      - socket_proxy
+    depends_on:
+      - socket-proxy
+    security_opt:
+      - no-new-privileges:true
+    # ports:
+    #   - "$GLANCES_PORT:61208"
+    pid: host
+    volumes:
+      - $DOCKERDIR/glances/glances.conf:/glances/conf/glances.conf # Use this if you want to add a glances.conf file
+      # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
+    environment:
+      # GLANCES_OPT: "-C /glances/conf/glances.conf --quiet --export influxdb"
+      GLANCES_OPT: "-w"
+      DOCKER_HOST: tcp://socket-proxy:2375
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.glances-rtr.entrypoints=https"
+      - "traefik.http.routers.glances-rtr.rule=Host(`nglances.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.glances-rtr.middlewares=chain-oauth@file"
+      ## HTTP Services
+      - "traefik.http.routers.glances-rtr.service=glances-svc"
+      - "traefik.http.services.glances-svc.loadbalancer.server.port=61208"
+
+  # APCUPSD - APC UPS Management
+  # create the apcupsd.conf file
+  apcupsd:
+    image: gersilex/apcupsd:latest
+    container_name: $DOCKER_GROUP-apcupsd
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "$APCUPSD_PORT:3551"
+    privileged: true
+    tty: true
+    volumes:
+      - /tmp/apcupsd-docker:/tmp/apcupsd-docker
+      - $DOCKERDIR/apcupsd/apcupsd.conf:/etc/apcupsd/apcupsd.conf
+      - $DOCKERDIR/apcupsd/doshutdown:/etc/apcupsd/doshutdown
+      - $DOCKERDIR/apcupsd/apcupsd.events:/var/log/apcupsd.events
+
+  # StatPing - Status Page & Monitoring Server
+  statping:
+    image: hunterlong/statping:latest
+    container_name: $DOCKER_GROUP-statping
+    restart: unless-stopped
+    networks:
+      - t2_proxy
+    security_opt:
+      - no-new-privileges:true
+    # ports:
+    #   - "$STATPING_PORT:8080"
+    volumes:
+      - $DOCKERDIR/statping:/app
+    environment:
+      VIRTUAL_HOST: localhost
+      VIRTUAL_PORT: 8080
+      DB_CONN: postgres
+      DB_HOST: postgres
+      DB_USER: $STATPING_DB_USER
+      DB_PASS: $STATPING_DB_PASS
+      DB_DATABASE: $STATPING_DB
+      IS_DOCKER: "true"
+      DISABLE_LOGS: "false"
+      NAME: StatPing
+      DESCRIPTION: Monitor web services
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.statping-rtr.entrypoints=https"
+      - "traefik.http.routers.statping-rtr.rule=Host(`statping.$DOMAINNAME`)"
+      ## Middlewares
+      - "traefik.http.routers.statping-rtr.middlewares=chain-no-auth@file"
+      ## HTTP Services
+      - "traefik.http.routers.statping-rtr.service=statping-svc"
+      - "traefik.http.services.statping-svc.loadbalancer.server.port=8080"
 
   ############################# DOWNLOADERS
 
@@ -1137,6 +1378,39 @@ services:
       - "traefik.http.routers.plexms-rtr.service=plexms-svc"
       - "traefik.http.services.plexms-svc.loadbalancer.server.port=32400"
 
+  # xTeve - IPTV proxy for Plex
+  xteve:
+    image: alturismo/xteve
+    container_name: $DOCKER_GROUP-xteve
+    restart: unless-stopped
+    # network_mode: host
+    networks:
+      - t2_proxy
+    ports:
+      - "34400:34400"
+      - "1901:1900"
+    # user: "0"
+    # logging:
+    #   options:
+    #     max-size: "10m"
+    #     max-files: 3
+    environment:
+      TZ: $TZ
+    volumes:
+      - $DOCKERDIR/xteve:/config:rw
+      - /dev/shm:/tmp/xteve
+    labels:
+      - "traefik.enable=true"
+      ## HTTP Routers
+      - "traefik.http.routers.xteve-rtr.entrypoints=https"
+      - "traefik.http.routers.xteve-rtr.rule=Host(`xteve.$DOMAINNAME`)"
+      - "traefik.http.routers.xteve-rtr.tls=true"
+      ## Middlewares
+      - "traefik.http.routers.xteve-rtr.middlewares=chain-authelia@file"
+      ## HTTP Services
+      - "traefik.http.routers.xteve-rtr.service=xteve-svc"
+      - "traefik.http.services.xteve-svc.loadbalancer.server.port=34400"
+
   # Emby - Media Server
   embyms:
     image: emby/embyserver:latest
@@ -1525,44 +1799,6 @@ services:
 
   ############################# UTILITIES
 
-  # Healthchecks
-  healthchecks:
-    image: linuxserver/healthchecks:latest
-    container_name: $DOCKER_GROUP-healthchecks
-    restart: always
-    networks:
-      - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - "$HEALTHCHECKS_PORT:8000"
-    volumes:
-      - $DOCKERDIR/healthchecks:/config
-    environment:
-      PUID: $PUID
-      PGID: $PGID
-      TZ: $TZ
-      SITE_ROOT: "https://healthchecks.$DOMAINNAME"
-      EMAIL_HOST: "smtp_to_telegram"
-      EMAIL_PORT: "2525"
-      EMAIL_HOST_USER: "username" # smtp_to_telgram doesn't care what this is
-      EMAIL_HOST_PASSWORD: "password" # smtp_to_telgram doesn't care what this is
-      DEFAULT_FROM_EMAIL: "healthchecks@$DOMAINNAME"
-      ALLOWED_HOSTS: "*"
-      SITE_NAME: "$DOMAINNAME Healthchecks"
-      SUPERUSER_PASSWORD: "${HEALTHCHECKS_SUPERUSER_PASSWORD}"
-      SUPERUSER_EMAIL: "$MY_EMAIL"
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.healthchecks-rtr.entrypoints=https"
-      - "traefik.http.routers.healthchecks-rtr.rule=Host(`healthchecks.$DOMAINNAME`)"
-      ## Middlewares
-      - "traefik.http.routers.healthchecks-rtr.middlewares=chain-authelia@file"
-      ## HTTP Services
-      - "traefik.http.routers.healthchecks-rtr.service=healthchecks-svc"
-      - "traefik.http.services.healthchecks-svc.loadbalancer.server.port=8000"
-
   # Duplicati - Backup
   duplicati:
     image: linuxserver/duplicati:latest
@@ -1633,61 +1869,6 @@ services:
       ## HTTP Services
       - "traefik.http.routers.firefox-rtr.service=firefox-svc"
       - "traefik.http.services.firefox-svc.loadbalancer.server.port=5800"
-
-  # Glances - System Information
-  glances:
-    image: nicolargo/glances:latest
-    container_name: $DOCKER_GROUP-glances
-    restart: unless-stopped
-    privileged: true
-    # network_mode: host
-    networks:
-      - t2_proxy
-      - socket_proxy
-    depends_on:
-      - socket-proxy
-    security_opt:
-      - no-new-privileges:true
-    # ports:
-    #   - "$GLANCES_PORT:61208"
-    pid: host
-    volumes:
-      - $DOCKERDIR/glances/glances.conf:/glances/conf/glances.conf # Use this if you want to add a glances.conf file
-      # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
-    environment:
-      # GLANCES_OPT: "-C /glances/conf/glances.conf --quiet --export influxdb"
-      GLANCES_OPT: "-w"
-      DOCKER_HOST: tcp://socket-proxy:2375
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.glances-rtr.entrypoints=https"
-      - "traefik.http.routers.glances-rtr.rule=Host(`nglances.$DOMAINNAME`)"
-      ## Middlewares
-      - "traefik.http.routers.glances-rtr.middlewares=chain-oauth@file"
-      ## HTTP Services
-      - "traefik.http.routers.glances-rtr.service=glances-svc"
-      - "traefik.http.services.glances-svc.loadbalancer.server.port=61208"
-
-  # APCUPSD - APC UPS Management
-  # create the apcupsd.conf file
-  apcupsd:
-    image: gersilex/apcupsd:latest
-    container_name: $DOCKER_GROUP-apcupsd
-    restart: unless-stopped
-    networks:
-      - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    ports:
-      - "$APCUPSD_PORT:3551"
-    privileged: true
-    tty: true
-    volumes:
-      - /tmp/apcupsd-docker:/tmp/apcupsd-docker
-      - $DOCKERDIR/apcupsd/apcupsd.conf:/etc/apcupsd/apcupsd.conf
-      - $DOCKERDIR/apcupsd/doshutdown:/etc/apcupsd/doshutdown
-      - $DOCKERDIR/apcupsd/apcupsd.events:/var/log/apcupsd.events
 
   # qDirStat - Directory Statistics
   qdirstat:
@@ -1803,42 +1984,6 @@ services:
       - "traefik.http.routers.dozzle-rtr.service=dozzle-svc"
       - "traefik.http.services.dozzle-svc.loadbalancer.server.port=8080"
 
-  # StatPing - Status Page & Monitoring Server
-  statping:
-    image: hunterlong/statping:latest
-    container_name: $DOCKER_GROUP-statping
-    restart: unless-stopped
-    networks:
-      - t2_proxy
-    security_opt:
-      - no-new-privileges:true
-    # ports:
-    #   - "$STATPING_PORT:8080"
-    volumes:
-      - $DOCKERDIR/statping:/app
-    environment:
-      VIRTUAL_HOST: localhost
-      VIRTUAL_PORT: 8080
-      DB_CONN: postgres
-      DB_HOST: postgres
-      DB_USER: $STATPING_DB_USER
-      DB_PASS: $STATPING_DB_PASS
-      DB_DATABASE: $STATPING_DB
-      IS_DOCKER: "true"
-      DISABLE_LOGS: "false"
-      NAME: StatPing
-      DESCRIPTION: Monitor web services
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.statping-rtr.entrypoints=https"
-      - "traefik.http.routers.statping-rtr.rule=Host(`statping.$DOMAINNAME`)"
-      ## Middlewares
-      - "traefik.http.routers.statping-rtr.middlewares=chain-no-auth@file"
-      ## HTTP Services
-      - "traefik.http.routers.statping-rtr.service=statping-svc"
-      - "traefik.http.services.statping-svc.loadbalancer.server.port=8080"
-
   # VSCode - VSCode Editing
   vscode:
     image: codercom/code-server:latest
@@ -1950,7 +2095,16 @@ services:
       DOMAIN: $DOMAINNAME
 
   # Cloudflare DDNS - Dynamic DNS Updater
-  # Moved to NAS
+  cloudddns:
+    container_name: $DOCKER_GROUP-cloudddns
+    restart: unless-stopped
+    image: joshava/cloudflare-ddns
+    volumes:
+      - $DOCKERDIR/cloudflare-ddns/config.yaml:/app/config.yaml
+    environment:
+      - PUID=$PUID
+      - PGID=$PGID
+      - TZ=$TZ
 
   # Cloudflare-Companion - Automatic CNAME DNS Creation
   cf-companion:
@@ -2042,40 +2196,3 @@ services:
       - $DOCKERDIR/php/php7:/usr/local/etc/php
       - $DOCKERDIR/sites/khub/html:/var/www/html/khub
       - $DOCKERDIR/sites/dash/html:/var/www/html/dash
-
-  ########################### MONITORING
-
-  # Glances - System Information
-  glances:
-    image: nicolargo/glances:latest
-    container_name: $DOCKER_GROUP-glances
-    restart: unless-stopped
-    privileged: true
-    # network_mode: host
-    networks:
-      - t2_proxy
-      - socket_proxy
-    # depends_on:
-    #   - socket-proxy
-    security_opt:
-      - no-new-privileges:true
-    # ports:
-    #   - "$GLANCES_PORT:61208"
-    pid: host
-    volumes:
-      - $DOCKERDIR/glances/glances.conf:/glances/conf/glances.conf # Use this if you want to add a glances.conf file
-      # - /var/run/docker.sock:/var/run/docker.sock:ro # Use Docker Socket Proxy instead for improved security
-    environment:
-      # GLANCES_OPT: "-C /glances/conf/glances.conf --quiet --export influxdb"
-      GLANCES_OPT: "-w"
-      DOCKER_HOST: tcp://socket-proxy:2375
-    labels:
-      - "traefik.enable=true"
-      ## HTTP Routers
-      - "traefik.http.routers.glances-rtr.entrypoints=https"
-      - "traefik.http.routers.glances-rtr.rule=HostHeader(`glances.$DOMAINNAME`)"
-      ## Middlewares
-      - "traefik.http.routers.glances-rtr.middlewares=chain-authelia@file"
-      ## HTTP Services
-      - "traefik.http.routers.glances-rtr.service=glances-svc"
-      - "traefik.http.services.glances-svc.loadbalancer.server.port=61208"
