@@ -26,8 +26,8 @@ config/traefik2/rules/*
 !config/traefik2/rules/*.example
 !config/traefik2/rules/tls-opts.yml
 !config/traefik2/acme
-!config/traefik2/acme/*.example
 config/traefik2/acme/*
+!config/traefik2/acme/*.example
 !config/authelia
 config/authelia/*
 !config/authelia/*.example
