@@ -11,7 +11,7 @@
 
 ### Traefik 2 (CURRENT - SYNOLOGY)
 
-- docker-compose-t2-synology.yml (Apps that I run on Synology NAS using Docker Compose)
+- docker-compose-synology.yml (Apps that I run on Synology NAS using Docker Compose)
 - Almost any app from the Traefik v2 docker-compose files listed above can be copy-pasted to the Synology Docker-Compose. I run a few on Synology and the rest on my Intel NUC Linux home server.
 
 ## What apps are included in this stack?
@@ -163,7 +163,6 @@ First, install Docker and Docker Compose.
 ## ToDo - New Apps Coming
 
  - TellyTv- IPTV proxy for Plex
- - Plex + plexdrive - Rapejim combo for plex
  - Plex web tools - Unofficial tools for plex
  - Rutorrent - Romancin rutorrent, probably the best one.
  - More apps...
