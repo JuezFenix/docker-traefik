@@ -509,7 +509,18 @@ services:
 
   ############################# DATABASE
   # Mariadb moved to NAS
-  # Influxdb moved to NAS
+  mariadb:
+    image: ghcr.io/linuxserver/mariadb
+    container_name: $DOCKER_GROUP-mariadb
+    environment:
+      - USER_ID: $PUID
+      - GROUP_ID: $PGID
+      - TZ: $TZ
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+    volumes:
+      - $DOCKERDIR/mariadb:/config
+    ports:
+      - "$MARIADB_PORT:3306
 
   # phpMyAdmin - Database management
   # Create a new user with admin privileges. Cannot login as MySQL root for some reason.
