@@ -189,8 +189,13 @@ First, install Docker and Docker Compose, as described in our <a href="https://w
 - Ensure good permissions for the `.env` file (recommended: 640).
 
 5. Edit `docker-compose-t2.yml` to include only the services you want or add additional services to it. Be sure to read the comments for each app and create any required files. You can copy snippets between any of the various docker-compose files in the repo.
-6. Start and stop your docker stack as described in our [Docker Media Server guide](https://www.smarthomebeginner.com/docker-home-media-server-2018-basic/).
-7. (Optional) Put non-docker apps behind Traefik proxy by creating traefik rules based on the examples provided.
+6. Create secrets 
+  - cd secrets && touch authelia_duo_api_secret_key authelia_jwt_secret authelia_notifier_smtp_password authelia_session_secret authelia_storage_mysql_password cloudflare_api_key cloudflare_api_token cloudflare_email cloudflare_email.example google_client_id google_client_secret guac_db_name guac_mysql_password guac_mysql_user my_email mysql_root_password oauth_secret plex_claim
+7. Create networks
+  - docker network create t2_proxy
+  - docker network create socket_proxy
+8. Start and stop your docker stack as described in our [Docker Media Server guide](https://www.smarthomebeginner.com/docker-home-media-server-2018-basic/).
+9. (Optional) Put non-docker apps behind Traefik proxy by creating traefik rules based on the examples provided.
 
 ## Starting and Stopping
 
