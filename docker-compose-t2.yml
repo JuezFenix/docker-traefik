@@ -4,10 +4,6 @@ version: "3.7"
 # Create t2_proxy network
 # docker network create t2_proxy
 # docker network create socket_proxy
-# Alternatively, you can specify the gateway and subnet to use
-# docker network create --gateway 192.168.90.1 --subnet 192.168.90.0/24 t2_proxy
-# docker network create --gateway 192.168.91.1 --subnet 192.168.91.0/24 socket_proxy
-# Subnet range 192.168.0.0/16 covers 192.168.0.0 to 192.168.255.255
 
 networks:
   t2_proxy:
@@ -62,11 +58,6 @@ secrets:
 services:
   ############################# FRONTENDS
 
-  # Traefik 2 - Reverse Proxy
-  # Touch (create empty files) traefik.log and acme/acme.json. Set acme.json permissions to 600.
-  # touch $DOCKERDIR/traefik2/acme/acme.json
-  # chmod 600 $DOCKERDIR/traefik2/acme/acme.json
-  # touch $DOCKERDIR/traefik2/traefik.log
   traefik:
     container_name: $DOCKER_GROUP-traefik
     image: traefik:picodon # chevrotin # the chevrotin tag refers to v2.2.x
