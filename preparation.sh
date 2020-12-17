@@ -1,5 +1,8 @@
 !/bin/bash
 
+echo "Preparing enviroment"
+cp .env.example .env
+
 echo "Preparing traefik files"
 cp config/traefik2/traefik.log.example config/traefik2/traefik.log
 cp config/traefik2/acme/acme.json.example config/traefik2/acme/acme.json
@@ -7,6 +10,9 @@ cp config/traefik2/acme/acme.json.example config/traefik2/acme/acme.json
 echo "Preparing authelia files"
 cp config/authelia/configuration.yml.example config/authelia/configuration.yml
 cp config/authelia/users_database.yml.example config/authelia/users_database.yml
+
+echo "Preparing influx files"
+cp config/influxdb/influxdb.conf.example config/influxdb/influxdb.conf
 
 echo "Preparing secret files"
 

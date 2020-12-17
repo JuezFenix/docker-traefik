@@ -32,6 +32,9 @@ config/authelia/*
 !config/picard
 config/picard/*
 !config/picard/*.example
+!config/influxdb
+config/influxdb/*
+!config/influxdb/*.example
 !secrets
 secrets/*
 !secrets/*.example

@@ -672,6 +672,21 @@ services:
       - "traefik.http.routers.grafana-rtr.service=grafana-svc"
       - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
 
+  # InfluxDB - Database for sensor data
+  # Create influxdb.conf
+  influxdb:
+    image: influxdb:latest
+    container_name: $DOCKER_GROUP-influxdb
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "$INFLUXDB_PORT:8086"
+    volumes:
+      # - $DOCKERDIR/influxdb/influxdb.conf:/etc/influxdb/influxdb.conf:ro
+      - $DOCKERDIR/influxdb/db:/var/lib/influxdb
+  #    command: -config /etc/influxdb/influxdb.conf
+
   # Varken - Monitor Plex, Sonarr, Radarr, and Other Data
   varken:
     image: boerderij/varken
