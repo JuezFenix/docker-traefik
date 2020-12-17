@@ -165,4 +165,3 @@ First, install Docker and Docker Compose.
 
  - TellyTv- IPTV proxy for Plex
  - More apps...
- - Cleaning .env file
