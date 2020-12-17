@@ -61,6 +61,7 @@ See the corresponding Docker Compose file for the compose snippet.
 
 ### DOWNLOADERS
 
+- ruTorrent - Torrent Downloader
 - jDownloader - Download management (LINUX)
 - TransmissionBT with VPN - Torrent Downloader with [IPVanish](https://www.smarthomebeginner.com/go/ipvanish) VPN. (LINUX)
 - SABnzbd - Binary newsgrabber, NZB downloader (LINUX)
@@ -163,6 +164,5 @@ First, install Docker and Docker Compose.
 ## ToDo - New Apps Coming
 
  - TellyTv- IPTV proxy for Plex
- - Rutorrent - Romancin rutorrent, probably the best one.
  - More apps...
  - Cleaning .env file
